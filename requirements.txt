@@ -1,0 +1,8 @@
+tensorflow==1.7.0
+opencv-python
+PyYAML
+rasterio
+sklearn
+numpy
+pandas
+matplotlib
