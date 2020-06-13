@@ -158,6 +158,7 @@ class InpaintCAModel(Model):
             xin, mask, reuse=reuse, training=training,
             padding=FLAGS.padding)
         batch_predicted = x2
+        print('Predicted ', batch_predicted.shape)
         losses = {}
         # apply mask and complete image
         batch_complete = batch_predicted*mask + batch_incomplete*(1.-mask)
@@ -177,6 +178,7 @@ class InpaintCAModel(Model):
                 viz_img.append(
                     resize(offset_flow, scale=4,
                            func=tf.image.resize_bilinear))
+            print(batch_pos.shape, batch_incomplete.shape, batch_complete.shape)
             images_summary(
                 tf.concat(viz_img, axis=2),
                 'raw_incomplete_predicted_complete', FLAGS.viz_max_out)

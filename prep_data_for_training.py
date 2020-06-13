@@ -1,4 +1,5 @@
 import cv2
+from concurrent.futures import ThreadPoolExecutor
 from skimage import measure
 import rasterio
 import glob
@@ -17,7 +18,7 @@ def create_train_val(source_path):
     print(len(data))
     data_resize = list(map(lambda x: cv2.resize(x, (256, 256)), data))
     n = len(data_resize)
-    train, test = train_test_split(data_resize, train_size=int(n*0.8), test_size=int(.2 *n))
+    train, test = train_test_split(data_resize, train_size=int(n*0.9), test_size=int(0.1*n))
     print('TRAIN: {}, VAL: {}'.format(len(train), len(test)))
     return train, test
 
@@ -47,16 +48,18 @@ def random_bbox(img_shape=(256, 256), mask_shape=(128, 128)):
     return mask
 
 def write_data(data, dir_name):
-    MASK_PER_IMG = 20
+    MASK_PER_IMG = 10
     indx = 1
     for d in data:
-        for time in range(MASK_PER_IMG):
-            num_masks = 0
-    #         while num_masks < MASK_PER_IMG:
+        #for time in range(MASK_PER_IMG):
+        num_masks = 0
+        loop = 0
+        while num_masks < MASK_PER_IMG and loop < 100:
             gen_res = random_free_mask(d)
+            loop += 1
             num_masks += len(gen_res)
             for img, mask in gen_res:
-                print('Process image {}'.format(indx))
+                print('Process image {}{}'.format(dir_name, indx))
                 mask = mask * 255
                 filename_input = os.path.join(dir_name, '{}.tif'.format(str(indx).zfill(3)))
                 filename_mask = os.path.join(dir_name, '{}mask.png'.format(str(indx).zfill(3)))
@@ -81,9 +84,12 @@ def gen(args):
     if not os.path.exists(val_path):
         os.mkdir(val_path)
     
-    print('Write train data to {}'.format(train_path))
-    write_data(train[:5], train_path)
-#     write_data(val, val_path)
+    # print('Write train data to {}'.format(train_path))
+    with ThreadPoolExecutor(max_workers=2) as e:
+        e.submit(write_data, train, train_path)
+        e.submit(write_data, val, val_path)
+#    write_data(train, train_path)
+#    write_data(val, val_path)
 #     print('Write validation data to {}'.format(val_path))
 #     write_data(val, val_path, True)
     

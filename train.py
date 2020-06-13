@@ -68,9 +68,9 @@ if __name__ == "__main__":
     g_optimizer = d_optimizer
     # train discriminator with secondary trainer, should initialize before
     # primary trainer.
-    discriminator_training_callback = ng.callbacks.SecondaryTrainer(
-#     discriminator_training_callback = ng.callbacks.SecondaryMultiGPUTrainer(
-#         num_gpus=FLAGS.num_gpus_per_job,
+#    discriminator_training_callback = ng.callbacks.SecondaryTrainer(
+    discriminator_training_callback = ng.callbacks.SecondaryMultiGPUTrainer(
+        num_gpus=FLAGS.num_gpus_per_job,
         pstep=1,
         optimizer=d_optimizer,
         var_list=d_vars,
@@ -81,9 +81,9 @@ if __name__ == "__main__":
             'model': model, 'FLAGS': FLAGS, 'data': data, 'loss_type': 'd'},
     )
     # train generator with primary trainer
-    trainer = ng.train.Trainer(
-#     trainer = ng.train.MultiGPUTrainer(
-#         num_gpus=FLAGS.num_gpus_per_job,
+#    trainer = ng.train.Trainer(
+    trainer = ng.train.MultiGPUTrainer(
+        num_gpus=FLAGS.num_gpus_per_job,
         optimizer=g_optimizer,
         var_list=g_vars,
         max_iters=FLAGS.max_iters,

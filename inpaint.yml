@@ -1,9 +1,9 @@
 # =========================== Basic Settings ===========================
 # machine info
-num_gpus_per_job: 0  # number of gpus each job need
+num_gpus_per_job: 1  # number of gpus each job need
 num_cpus_per_job: 4  # number of gpus each job need
 num_hosts_per_job: 1
-memory_per_job: 32  # number of gpus each job need
+memory_per_job: 8  # number of gpus each job need
 gpu_type: 'nvidia-tesla-p100'
 
 # parameters
@@ -22,8 +22,8 @@ random_seed: False
 padding: 'SAME'
 
 # training
-train_spe: 4000
-max_iters: 100000000
+train_spe: 1000
+max_iters: 10000000
 viz_max_out: 10
 val_psteps: 2000
 
@@ -61,7 +61,7 @@ height: 128
 width: 128
 max_delta_height: 32
 max_delta_width: 32
-batch_size: 16
+batch_size: 4
 vertical_margin: 0
 horizontal_margin: 0
 
