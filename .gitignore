@@ -2,3 +2,5 @@ model_logs
 logs
 data
 neuralgym_logs
+data_flist
+srtm_aus

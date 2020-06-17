@@ -137,6 +137,7 @@ class InpaintCAModel(Model):
             edge = tf.cast(edge > FLAGS.edge_threshold, tf.float32)
         batch_pos = batch_data / 127.5 - 1.
         mask /= 255 #(batch_size, 256, 256, 1)
+        # print(mask.shape)
         # generate mask, 1 represents masked point
 #         bbox = random_bbox(FLAGS)
 #         regular_mask = bbox2mask(FLAGS, bbox, name='mask_c')
@@ -158,7 +159,7 @@ class InpaintCAModel(Model):
             xin, mask, reuse=reuse, training=training,
             padding=FLAGS.padding)
         batch_predicted = x2
-        print('Predicted ', batch_predicted.shape)
+        # print('Predicted ', batch_predicted.shape)
         losses = {}
         # apply mask and complete image
         batch_complete = batch_predicted*mask + batch_incomplete*(1.-mask)
@@ -178,7 +179,7 @@ class InpaintCAModel(Model):
                 viz_img.append(
                     resize(offset_flow, scale=4,
                            func=tf.image.resize_bilinear))
-            print(batch_pos.shape, batch_incomplete.shape, batch_complete.shape)
+            # print(batch_pos.shape, batch_incomplete.shape, batch_complete.shape)
             images_summary(
                 tf.concat(viz_img, axis=2),
                 'raw_incomplete_predicted_complete', FLAGS.viz_max_out)
