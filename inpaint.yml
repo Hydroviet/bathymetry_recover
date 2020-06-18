@@ -23,15 +23,17 @@ padding: 'SAME'
 
 # training
 train_spe: 1000
-max_iters: 10000000
+max_iters: 100
 viz_max_out: 10
 val_psteps: 2000
 
 # data
 data_flist:
     srtm_aus: [
-        'data_flist/train.flist',
-        'data_flist/train_mask.flist',
+        'data/data_flist/train.flist',
+#         'data/data_flist/train_mask.flist',
+        'data/data_flist/validation.flist',
+#         'data/data_flist/validation_mask.flist',
     ]
 #   # https://github.com/jiahuiyu/progressive_growing_of_gans_tf
 #   celebahq: [

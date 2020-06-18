@@ -18,12 +18,12 @@ def create_train_val(source_path):
     print(len(data))
     data_resize = list(map(lambda x: cv2.resize(x, (256, 256)), data))
     n = len(data_resize)
-    train, test = train_test_split(data_resize, train_size=int(n*0.9), test_size=int(0.1*n))
+    train, test = train_test_split(data_resize, train_size=int(n*0.8), test_size=int(0.2*n))
     print('TRAIN: {}, VAL: {}'.format(len(train), len(test)))
     return train, test
 
 def random_free_mask(img, min_size=64*64, max_size=128*128):
-    level = np.random.uniform(np.median(img) - np.std(img), np.median(img))
+    level = np.random.uniform(np.median(img) - 2*np.std(img), np.median(img) + 2*np.std(img))
     mask = (img <= level)*1
     all_labels = measure.label(mask, background=0)
     labels = np.unique(all_labels)
@@ -32,7 +32,7 @@ def random_free_mask(img, min_size=64*64, max_size=128*128):
         label = labels[i]
         connected.append((np.sum(all_labels == label), label))
     masks = list(filter(lambda x: x[0] >= min_size and x[0] <= max_size, connected))
-    masks = list(map(lambda x: (img, all_labels == x[1]), masks))
+    masks = list(map(lambda x: (img, (all_labels == x[1])*1), masks))
     return masks
 
 def random_bbox(img_shape=(256, 256), mask_shape=(128, 128)):
@@ -48,7 +48,7 @@ def random_bbox(img_shape=(256, 256), mask_shape=(128, 128)):
     return mask
 
 def write_data(data, dir_name):
-    MASK_PER_IMG = 10
+    MASK_PER_IMG = 2
     indx = 1
     for d in data:
         #for time in range(MASK_PER_IMG):

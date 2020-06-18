@@ -35,5 +35,7 @@ if __name__ == "__main__":
         os.mkdir(args.dest)
     write_flist(args.src, args.dest, 'train', False)
     write_flist(args.src, args.dest, 'train', True)
+    write_flist(args.src, args.dest, 'validation', False)
+    write_flist(args.src, args.dest, 'validation', True)
     
 

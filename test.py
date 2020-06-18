@@ -26,7 +26,17 @@ if __name__ == "__main__":
 
     model = InpaintCAModel()
     image = cv2.imread(args.image)
+    im_min = image.min()
+    im_max = image.max()
+    image = cv2.normalize(image, None, 255, 0, cv2.NORM_MINMAX, cv2.CV_32F)
+    if len(image.shape) < 3:
+        image = image[..., np.newaxis]
+        
     mask = cv2.imread(args.mask)
+    maks = mask[:, :, 0]
+    if len(mask.shape) < 3:
+        mask = mask[..., np.newaxis]
+        
     # mask = cv2.resize(mask, (0,0), fx=0.5, fy=0.5)
 
     assert image.shape == mask.shape
@@ -60,4 +70,7 @@ if __name__ == "__main__":
         sess.run(assign_ops)
         print('Model loaded.')
         result = sess.run(output)
-        cv2.imwrite(args.output, result[0][:, :, ::-1])
+        result = result[0][:, :, ::-1]
+        # normalize
+        result = (im_max-im_min)*(result - result.min())/(result.max()-result.min()) + im_min
+        cv2.imwrite(args.output, result)

@@ -9,13 +9,13 @@ from inpaint_model import InpaintCAModel
 
 def multigpu_graph_def(model, FLAGS, data, gpu_id=0, loss_type='g'):
     with tf.device('/cpu:0'):
-        images, masks = data.data_pipeline(FLAGS.batch_size)
+        batch_data = data.data_pipeline(FLAGS.batch_size)
     if gpu_id == 0 and loss_type == 'g':
         _, _, losses = model.build_graph_with_losses(
-            FLAGS, images, masks, FLAGS, summary=True, reuse=True)
+            FLAGS, batch_data, FLAGS, summary=True, reuse=True)
     else:
         _, _, losses = model.build_graph_with_losses(
-            FLAGS, images, masks, FLAGS, reuse=True)
+            FLAGS, batch_data, FLAGS, reuse=True)
     if loss_type == 'g':
         return losses['g_loss']
     elif loss_type == 'd':
@@ -32,26 +32,20 @@ if __name__ == "__main__":
     # Read flist input and mask image
     with open(FLAGS.data_flist[FLAGS.dataset][0]) as f:
         fnames_input = f.read().splitlines()
-    with open(FLAGS.data_flist[FLAGS.dataset][1]) as f:
-        fnames_mask = f.read().splitlines()
-        
-    if FLAGS.guided:
-        fnames = [(fname, fname[:-4] + '_edge.jpg') for fname in fnames]
-        img_shapes = [img_shapes, img_shapes]
+    train_fnames = [(fname, fname[:-4]+'mask.png') for fname in fnames_input]
     data = ng.data.DataFromFNames(
-        list(zip(fnames_input, fnames_mask)), img_shapes, random_crop=FLAGS.random_crop,
+        train_fnames, img_shapes, random_crop=FLAGS.random_crop,
         nthreads=FLAGS.num_cpus_per_job)
-    images, masks = data.data_pipeline(FLAGS.batch_size)
+    batch_data = data.data_pipeline(FLAGS.batch_size)
     # main model
     model = InpaintCAModel()
-    g_vars, d_vars, losses = model.build_graph_with_losses(FLAGS, images, masks)
+    g_vars, d_vars, losses = model.build_graph_with_losses(FLAGS, batch_data)
     # validation images
     if FLAGS.val:
-        with open(FLAGS.data_flist[FLAGS.dataset][2]) as f:
+        with open(FLAGS.data_flist[FLAGS.dataset][1]) as f:
             val_fnames = f.read().splitlines()
-        if FLAGS.guided:
-            val_fnames = [
-                (fname, fname[:-4] + '_edge.jpg') for fname in val_fnames]
+        val_fnames = [(fname, fname[:-4] + 'mask.png') for fname in val_fnames]
+
         # progress monitor by visualizing static images
         for i in range(FLAGS.static_view_size):
             static_fnames = val_fnames[i:i+1]
