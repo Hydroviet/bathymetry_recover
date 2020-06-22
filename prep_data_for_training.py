@@ -48,16 +48,16 @@ def random_bbox(img_shape=(256, 256), mask_shape=(128, 128)):
     return mask
 
 def write_data(data, dir_name):
-    MASK_PER_IMG = 2
+    MASK_PER_IMG = 10
     indx = 1
     for d in data:
-        #for time in range(MASK_PER_IMG):
-        num_masks = 0
-        loop = 0
-        while num_masks < MASK_PER_IMG and loop < 100:
+        for time in range(MASK_PER_IMG):
+            #num_masks = 0
+            #loop = 0
+        #while num_masks < MASK_PER_IMG and loop < 100:
             gen_res = random_free_mask(d)
-            loop += 1
-            num_masks += len(gen_res)
+            #loop += 1
+            #num_masks += len(gen_res)
             for img, mask in gen_res:
                 print('Process image {}{}'.format(dir_name, indx))
                 mask = mask * 255

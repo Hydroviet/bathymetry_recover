@@ -221,6 +221,10 @@ class InpaintCAModel(Model):
 #             viz_img.append(
 #                 resize(offset_flow, scale=4,
 #                        func=tf.image.resize_bilinear))
+
+        l1_val = tf.reduce_mean((batch_pos - x1))
+
+        scalar_summary('losses/l1_val', l1_val)
         images_summary(
             tf.concat(viz_img, axis=2),
             name+'_raw_incomplete_complete', FLAGS.viz_max_out)
