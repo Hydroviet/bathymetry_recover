@@ -22,18 +22,32 @@ def create_train_val(source_path):
     print('TRAIN: {}, VAL: {}'.format(len(train), len(test)))
     return train, test
 
-def random_free_mask(img, min_size=64*64, max_size=128*128):
-    level = np.random.uniform(np.median(img) - 2*np.std(img), np.median(img) + 2*np.std(img))
-    mask = (img <= level)*1
-    all_labels = measure.label(mask, background=0)
-    labels = np.unique(all_labels)
-    connected = []
-    for i in range(1, len(labels)):
-        label = labels[i]
-        connected.append((np.sum(all_labels == label), label))
-    masks = list(filter(lambda x: x[0] >= min_size and x[0] <= max_size, connected))
-    masks = list(map(lambda x: (img, (all_labels == x[1])*1), masks))
-    return masks
+def gen_mask(img, min_size=64*64, max_size=128*128):
+    def get_mask(img, level):
+        mask = (img <= level)*1
+        all_labels = measure.label(mask, background=0)
+        labels = np.unique(all_labels)
+        connected = []
+        for i in range(1, len(labels)):
+            label = labels[i]
+            connected.append((np.sum(all_labels == label), label))
+        mask = sorted(connected)[::-1][0]
+        return mask[0], (all_labels == mask[1])*1
+    
+    minL = img.min()
+    maxL = img.max()
+    res = []
+    while minL <= maxL:
+        mid = (minL + maxL)//2
+        mask = get_mask(img, mid)
+        if mask[0] < min_size:
+            minL = mid  + 1
+        elif mask[0] > max_size:
+            maxL = mid -1
+        else:
+            res = mask
+            break
+    return (img, res[1])
 
 def random_bbox(img_shape=(256, 256), mask_shape=(128, 128)):
     img_height, img_width = img_shape
@@ -48,26 +62,16 @@ def random_bbox(img_shape=(256, 256), mask_shape=(128, 128)):
     return mask
 
 def write_data(data, dir_name):
-    MASK_PER_IMG = 10
-    indx = 1
-    for d in data:
-        for time in range(MASK_PER_IMG):
-            #num_masks = 0
-            #loop = 0
-        #while num_masks < MASK_PER_IMG and loop < 100:
-            gen_res = random_free_mask(d)
-            #loop += 1
-            #num_masks += len(gen_res)
-            for img, mask in gen_res:
-                print('Process image {}{}'.format(dir_name, indx))
-                mask = mask * 255
-                filename_input = os.path.join(dir_name, '{}.tif'.format(str(indx).zfill(3)))
-                filename_mask = os.path.join(dir_name, '{}mask.png'.format(str(indx).zfill(3)))
-                if not cv2.imwrite(filename_input, img):
-                    print('Error writing file {}'.format(filename_input))
-                if not cv2.imwrite(filename_mask, mask):
-                    print('Error writing mask file {}'.format(filename_mask))
-                indx += 1
+    for indx, d in enumerate(data):
+        img, mask = gen_mask(d)
+        print('Process image {}{}'.format(dir_name, indx))
+        mask = mask * 255
+        filename_input = os.path.join(dir_name, '{}.tif'.format(str(indx).zfill(3)))
+        filename_mask = os.path.join(dir_name, '{}mask.png'.format(str(indx).zfill(3)))
+        if not cv2.imwrite(filename_input, img):
+            print('Error writing file {}'.format(filename_input))
+        if not cv2.imwrite(filename_mask, mask):
+            print('Error writing mask file {}'.format(filename_mask))
 
 def gen(args):
     source_path = args.src
@@ -88,7 +92,7 @@ def gen(args):
     with ThreadPoolExecutor(max_workers=2) as e:
         e.submit(write_data, train, train_path)
         e.submit(write_data, val, val_path)
-#    write_data(train, train_path)
+#     write_data(train, train_path)
 #    write_data(val, val_path)
 #     print('Write validation data to {}'.format(val_path))
 #     write_data(val, val_path, True)
