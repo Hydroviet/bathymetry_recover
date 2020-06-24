@@ -173,7 +173,7 @@ class InpaintCAModel(Model):
             raise NotImplementedError('{} not implemented.'.format(FLAGS.gan))
         if summary:
             # summary the magnitude of gradients from different losses w.r.t. predicted image
-            gradients_summary(losses['g_loss'], batch_predicted, name='g_loss')
+            #gradients_summary(losses['g_loss'], batch_predicted, name='g_loss')
             gradients_summary(losses['g_loss'], x2, name='g_loss_to_x2')
             # gradients_summary(losses['ae_loss'], x1, name='ae_loss_to_x1')
             gradients_summary(losses['ae_loss'], x2, name='ae_loss_to_x2')
@@ -189,19 +189,6 @@ class InpaintCAModel(Model):
     def build_infer_graph(self, FLAGS, batch_data, bbox=None, name='val'):
         """
         """
-#         if FLAGS.guided:
-#             batch_data, edge = batch_data
-#             edge = edge[:, :, :, 0:1] / 255.
-#             edge = tf.cast(edge > FLAGS.edge_threshold, tf.float32)
-#         regular_mask = bbox2mask(FLAGS, bbox, name='mask_c')
-#         irregular_mask = brush_stroke_mask(FLAGS, name='mask_c')
-#         mask = tf.cast(
-#             tf.logical_or(
-#                 tf.cast(irregular_mask, tf.bool),
-#                 tf.cast(regular_mask, tf.bool),
-#             ),
-#             tf.float32
-#         )
         batch_data, mask = batch_data
         mask /= 255 #(batch_size, 256, 256, 1)
         mask = tf.cast(mask > 0.5, tf.float32)
@@ -221,10 +208,17 @@ class InpaintCAModel(Model):
 #             viz_img.append(
 #                 resize(offset_flow, scale=4,
 #                        func=tf.image.resize_bilinear))
+        # norm 1
+        l1_val = tf.reduce_mean((batch_pos - batch_complete))
+        scalar_summary('validation/l1_val', l1_val)
+        # gan loss
+        batch_pos_neg = tf.concat([batch_pos, batch_complete], axis=0)
+        batch_pos_neg = tf.concat([batch_pos_neg, tf.tile(mask, [2, 1, 1, 1])], axis=3)
+        pos_neg = self.build_gan_discriminator(batch_pos_neg, training=False, reuse=True)
+        pos, neg = tf.split(pos_neg, 2)
+        g_loss, d_loss = gan_hinge_loss(pos, neg)
+        scalar_summary('validation/d_loss', d_loss)
 
-        l1_val = tf.reduce_mean((batch_pos - x1))
-
-        scalar_summary('losses/l1_val', l1_val)
         images_summary(
             tf.concat(viz_img, axis=2),
             name+'_raw_incomplete_complete', FLAGS.viz_max_out)
