@@ -28,7 +28,6 @@ def write_flist(src, dest, name, mask=True):
     fo.write("\n".join(sorted(files)))
     fo.close()
     
-
 if __name__ == "__main__":
     args = parser.parse_args()
     if not os.path.exists(args.dest):

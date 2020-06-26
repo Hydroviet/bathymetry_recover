@@ -29,7 +29,7 @@ parser.add_argument(
 
 if __name__ == "__main__":
     FLAGS = ng.Config('inpaint.yml')
-    ng.get_gpus(1)
+    # ng.get_gpus(1)
     # os.environ['CUDA_VISIBLE_DEVICES'] =''
     args = parser.parse_args()
 
@@ -39,11 +39,11 @@ if __name__ == "__main__":
 
     model = InpaintCAModel()
     input_image_ph = tf.placeholder(
-        tf.float32, shape=(1, args.image_height, args.image_width*2, 3))
+        tf.float32, shape=(1, args.image_height, args.image_width*2, 1))
     output = model.build_server_graph(FLAGS, input_image_ph)
     output = (output + 1.) * 127.5
     output = tf.reverse(output, [-1])
-    output = tf.saturate_cast(output, tf.uint8)
+#     output = tf.saturate_cast(output, tf.uint8)
     vars_list = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
     assign_ops = []
     for var in vars_list:
@@ -63,10 +63,20 @@ if __name__ == "__main__":
         image, mask, out = line.split()
         base = os.path.basename(mask)
 
-        image = cv2.imread(image)
-        mask = cv2.imread(mask)
-        image = cv2.resize(image, (args.image_width, args.image_height))
-        mask = cv2.resize(mask, (args.image_width, args.image_height))
+        image = cv2.imread(image, -1)
+        im_min = image.min()
+        im_max = image.max()
+        image = cv2.normalize(image, None, 255, 0, cv2.NORM_MINMAX, cv2.CV_32F)
+        if len(image.shape) < 3:
+            image = image[..., np.newaxis]
+        
+        mask = cv2.imread(mask, -1)
+        if len(mask.shape) == 3:
+            mask = mask[:, :, 0]
+        if len(mask.shape) < 3:
+            mask = mask[..., np.newaxis]
+        # image = cv2.resize(image, (args.image_width, args.image_height))
+        # mask = cv2.resize(mask, (args.image_width, args.image_height))
         # cv2.imwrite(out, image*(1-mask/255.) + mask)
         # # continue
         # image = np.zeros((128, 256, 3))
@@ -87,6 +97,8 @@ if __name__ == "__main__":
         # load pretrained model
         result = sess.run(output, feed_dict={input_image_ph: input_image})
         print('Processed: {}'.format(out))
-        cv2.imwrite(out, result[0][:, :, ::-1])
+        result = result[0][:, :, ::-1]
+        result = (im_max-im_min)*(result - result.min())/(result.max()-result.min()) + im_min
+        cv2.imwrite(out, result)
 
     print('Time total: {}'.format(time.time() - t))
