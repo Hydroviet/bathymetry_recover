@@ -18,7 +18,7 @@ def create_train_val(source_path):
     print(len(data))
     data_resize = list(map(lambda x: cv2.resize(x, (256, 256)), data))
     n = len(data_resize)
-    train, test = train_test_split(data_resize, train_size=int(n*0.8), test_size=int(0.2*n))
+    train, test = train_test_split(data_resize, train_size=int(n*0.9), test_size=int(0.1*n))
     print('TRAIN: {}, VAL: {}'.format(len(train), len(test)))
     return train, test
 
@@ -31,6 +31,8 @@ def gen_mask(img, min_size=64*64, max_size=128*128):
         for i in range(1, len(labels)):
             label = labels[i]
             connected.append((np.sum(all_labels == label), label))
+        if len(connected) == 0:
+            return 0, None
         mask = sorted(connected)[::-1][0]
         return mask[0], (all_labels == mask[1])*1
     
@@ -47,6 +49,8 @@ def gen_mask(img, min_size=64*64, max_size=128*128):
         else:
             res = mask
             break
+    if len(res) == 0:
+        return img, None
     return (img, res[1])
 
 def random_bbox(img_shape=(256, 256), mask_shape=(128, 128)):
@@ -62,9 +66,16 @@ def random_bbox(img_shape=(256, 256), mask_shape=(128, 128)):
     return mask
 
 def write_data(data, dir_name):
-    MASK_PER_IMG = 2
-    for indx, d in enumerate(data):
+    #print(len(data))
+    #return
+    cnt = 0
+    indx = 0
+    for d in data:
         img, mask = gen_mask(d)
+        if mask is None:
+            cnt += 1
+            print('Can not find mask {}'.format(indx))
+            continue
         print('Process image {}{}'.format(dir_name, indx))
         mask = mask * 255
         filename_input = os.path.join(dir_name, '{}.tif'.format(str(indx).zfill(3)))
@@ -73,6 +84,8 @@ def write_data(data, dir_name):
             print('Error writing file {}'.format(filename_input))
         if not cv2.imwrite(filename_mask, mask):
             print('Error writing mask file {}'.format(filename_mask))
+        indx += 1
+    return cnt, cnt/len(data)
 
 def gen(args):
     source_path = args.src
@@ -91,9 +104,13 @@ def gen(args):
     
     # print('Write train data to {}'.format(train_path))
     with ThreadPoolExecutor(max_workers=2) as e:
-        e.submit(write_data, train, train_path)
-        e.submit(write_data, val, val_path)
-#     write_data(train, train_path)
+        trainW = e.submit(write_data, train, train_path)
+        valW = e.submit(write_data, val, val_path)
+
+    print('[TRAIN]Number of no mask {}'.format(trainW.result()))
+    print('[VAL]Number of no mask {}'.format(valW.result()))
+
+    #write_data(train, train_path)
 #    write_data(val, val_path)
 #     print('Write validation data to {}'.format(val_path))
 #     write_data(val, val_path, True)

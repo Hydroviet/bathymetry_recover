@@ -8,11 +8,11 @@ gpu_type: 'nvidia-tesla-p100'
 
 # parameters
 name: srtm_aus  # any name
-model_restore: 'logs/srtm_aus'  # logs/places2_gated_conv
+model_restore: ''  # logs/places2_gated_conv
 dataset: 'srtm_aus'  # 'tmnist', 'dtd', 'places2', 'celeba', 'imagenet', 'cityscapes'
 random_crop: False  # Set to false when dataset is 'celebahq', meaning only resize the images to img_shapes, instead of crop img_shapes from a larger raw image. This is useful when you train on images with different resolutions like places2. In these cases, please set random_crop to true.
-val: False  # true if you want to view validation results in tensorboard
-log_dir: logs/srtm_aus
+val: True  # true if you want to view validation results in tensorboard
+log_dir: logs/srtm_aus18k
 
 gan: 'sngan'
 gan_loss_alpha: 1
@@ -23,17 +23,15 @@ padding: 'SAME'
 
 # training
 train_spe: 1000
-max_iters: 100
+max_iters: 1000000
 viz_max_out: 10
-val_psteps: 2
+val_psteps: 500
 
 # data
 data_flist:
     srtm_aus: [
-        'data/data_flist/train.flist',
-#         'data/data_flist/train_mask.flist',
-        'data/data_flist/validation.flist',
-#         'data/data_flist/validation_mask.flist',
+        'data/train.flist',
+        'data/validation.flist',
     ]
 #   # https://github.com/jiahuiyu/progressive_growing_of_gans_tf
 #   celebahq: [
@@ -58,19 +56,19 @@ data_flist:
   
 
 static_view_size: 30
-img_shapes: [256, 256, 1]
+img_shapes: [128, 128, 1]
 height: 128
 width: 128
 max_delta_height: 32
 max_delta_width: 32
-batch_size: 8
+batch_size: 16
 vertical_margin: 0
 horizontal_margin: 0
 
 # loss
 ae_loss: True
 l1_loss: True
-l1_loss_alpha: 1.
+l1_loss_alpha: 0.5
 
 # to tune
 guided: False
