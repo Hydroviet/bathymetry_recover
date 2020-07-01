@@ -134,7 +134,8 @@ class InpaintCAModel(Model):
         batch_data, mask = batch_data
         mask /= 255 #(batch_size, 256, 256, 1)
         mask = tf.cast(mask > 0.5, tf.float32)
-        batch_pos = batch_data / 127.5 - 1.
+        #batch_pos = batch_data / 127.5 - 1.
+        batch_pos = 2*(batch_data + 1)/2290 - 1
         batch_incomplete = batch_pos*(1.-mask)
         xin = batch_incomplete
         x1, x2, offset_flow = self.build_inpaint_net(
