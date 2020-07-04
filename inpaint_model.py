@@ -134,8 +134,12 @@ class InpaintCAModel(Model):
         batch_data, mask = batch_data
         mask /= 255 #(batch_size, 256, 256, 1)
         mask = tf.cast(mask > 0.5, tf.float32)
+        # Normalize min max to [-1, 1]
         #batch_pos = batch_data / 127.5 - 1.
-        batch_pos = 2*(batch_data + 1)/2290 - 1
+        minV = FLAGS.min_dem
+        maxV = FLAGS.max_dem
+        batch_pos = 2*(batch_data - minV)/ (maxV - minV) - 1.
+        
         batch_incomplete = batch_pos*(1.-mask)
         xin = batch_incomplete
         x1, x2, offset_flow = self.build_inpaint_net(
@@ -193,7 +197,12 @@ class InpaintCAModel(Model):
         batch_data, mask = batch_data
         mask /= 255 #(batch_size, 256, 256, 1)
         mask = tf.cast(mask > 0.5, tf.float32)
-        batch_pos = batch_data / 127.5 - 1.
+        # Normalize min max to [-1, 1]
+        #batch_pos = batch_data / 127.5 - 1.
+        minV = FLAGS.min_dem
+        maxV = FLAGS.max_dem
+        batch_pos = 2*(batch_data - minV)/ (maxV - minV) - 1.
+        
         batch_incomplete = batch_pos*(1.-mask)
         xin = batch_incomplete
         # inpaint
@@ -209,16 +218,6 @@ class InpaintCAModel(Model):
 #             viz_img.append(
 #                 resize(offset_flow, scale=4,
 #                        func=tf.image.resize_bilinear))
-        # norm 1
-        l1_val = tf.reduce_mean((batch_pos - batch_complete))
-        scalar_summary('validation/l1_val', l1_val)
-        # gan loss
-        batch_pos_neg = tf.concat([batch_pos, batch_complete], axis=0)
-        batch_pos_neg = tf.concat([batch_pos_neg, tf.tile(mask, [2, 1, 1, 1])], axis=3)
-        pos_neg = self.build_gan_discriminator(batch_pos_neg, training=False, reuse=True)
-        pos, neg = tf.split(pos_neg, 2)
-        g_loss, d_loss = gan_hinge_loss(pos, neg)
-        scalar_summary('validation/d_loss', d_loss)
 
         images_summary(
             tf.concat(viz_img, axis=2),
@@ -237,8 +236,12 @@ class InpaintCAModel(Model):
         # generate mask, 1 represents masked point
         batch_raw, masks_raw = tf.split(batch_data, 2, axis=2)
         masks = tf.cast(masks_raw[0:1, :, :, 0:1] > 127.5, tf.float32)
-
-        batch_pos = batch_raw / 127.5 - 1.
+        # Normalize min max to [-1, 1]
+        #batch_pos = batch_data / 127.5 - 1.
+        minV = FLAGS.min_dem
+        maxV = FLAGS.max_dem
+        batch_pos = 2*(batch_data - minV)/ (maxV - minV) - 1.
+        
         batch_incomplete = batch_pos * (1. - masks)
         xin = batch_incomplete
         # inpaint
