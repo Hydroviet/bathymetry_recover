@@ -26,24 +26,15 @@ if __name__ == "__main__":
 
     model = InpaintCAModel()
     image = cv2.imread(args.image, -1)
-    im_min = image.min()
-    im_max = image.max()
-#     image = cv2.resize(image, (256, 256))
-    image = cv2.normalize(image, None, 255, 0, cv2.NORM_MINMAX, cv2.CV_32F)
     if len(image.shape) < 3:
         image = image[..., np.newaxis]
         
     mask = cv2.imread(args.mask, -1)
-#     mask = cv2.resize(mask, (256, 256))
     if len(mask.shape) == 3:
         mask = mask[:, :, 0]
     if len(mask.shape) < 3:
         mask = mask[..., np.newaxis]
         
-    # mask = cv2.resize(mask, (0,0), fx=0.5, fy=0.5)
-
-    print('Shape of image: {}'.format(image.shape))
-    print('Shape of image: {}'.format(mask.shape))
     assert image.shape == mask.shape
 
     h, w, _ = image.shape
@@ -61,11 +52,14 @@ if __name__ == "__main__":
     with tf.Session(config=sess_config) as sess:
         input_image = tf.constant(input_image, dtype=tf.float32)
         output = model.build_server_graph(FLAGS, input_image)
-        output = (output + 1.) * 127.5
+        minV = FLAGS.min_dem
+        maxV = FLAGS.max_dem
+        output = (output + 1.)*(maxV - minV)/2 + minV
         output = tf.reverse(output, [-1])
 #         output = tf.saturate_cast(output, tf.uint8)
         # load pretrained model
         vars_list = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
+        print('Checkpoint dir: ', args.checkpoint_dir)
         assign_ops = []
         for var in vars_list:
             vname = var.name
@@ -76,6 +70,4 @@ if __name__ == "__main__":
         print('Model loaded.')
         result = sess.run(output)
         result = result[0][:, :, ::-1]
-        # normalize
-        result = (im_max-im_min)*(result - result.min())/(result.max()-result.min()) + im_min
         cv2.imwrite(args.output, result)

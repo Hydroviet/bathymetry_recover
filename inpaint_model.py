@@ -240,7 +240,8 @@ class InpaintCAModel(Model):
         #batch_pos = batch_data / 127.5 - 1.
         minV = FLAGS.min_dem
         maxV = FLAGS.max_dem
-        batch_pos = 2*(batch_data - minV)/ (maxV - minV) - 1.
+        batch_pos = 2*(batch_raw - minV)/ (maxV - minV) - 1.
+        #batch_pos = 2*(batch_raw + 1)/2290 - 1
         
         batch_incomplete = batch_pos * (1. - masks)
         xin = batch_incomplete
