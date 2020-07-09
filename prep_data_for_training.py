@@ -10,6 +10,7 @@ import argparse
 import time
 import neuralgym as ng
 import tensorflow as tf
+from tqdm import tqdm
 
 def gen_mask(img, min_size=64*64, max_size=128*128):
     def get_mask(img, level):
@@ -57,21 +58,24 @@ def gen_mask_batch(batch_data, dest, start):
         indx += 1
 
 def preprocess(imgs):
-    pimgs = map(lambda img: cv2.medianBlur(img, 5), imgs)
+    pimgs = list(map(lambda img: cv2.medianBlur(img, 5), imgs))
+    pimgs = list(filter(lambda img: np.quantile(img, 0.90) - np.quantile(img, 0.5) >= 30 and img.min() >= 5, imgs))
     return pimgs
 
-def read_batch(src, dest, batch_size=8, nthreads=2):
+def read_batch(src, dest, batch_size=8, nthreads=8):
+    print(src, dest)
     if not os.path.exists(dest):
         os.mkdir(dest)
         
-    files = glob.glob(src+'*.tif')
+    print('Read from: ', src)
+    files = glob.glob(os.path.join(src, '*.tif'))
     num = len(files)
     data = ng.data.DataFromFNames(files, [256, 256, 1], nthreads=nthreads)
     batch_data = data.data_pipeline(batch_size)
     sess = tf.Session(config=tf.ConfigProto())
     tf.train.start_queue_runners(sess)
     stime = time.time()
-    for i in range(num//batch_size):
+    for i in tqdm(range(num//batch_size)):
         imgs = list(sess.run(batch_data))
         imgs = preprocess(imgs)
         gen_mask_batch(imgs, dest, batch_size*i)

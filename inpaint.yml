@@ -9,10 +9,10 @@ gpu_type: 'nvidia-tesla-p100'
 # parameters
 name: srtm_aus  # any name
 model_restore: ''  # logs/places2_gated_conv
-dataset: 'srtm_aus'  # 'tmnist', 'dtd', 'places2', 'celeba', 'imagenet', 'cityscapes'
+dataset: 'srtm_aus_mountainous'  # 'tmnist', 'dtd', 'places2', 'celeba', 'imagenet', 'cityscapes'
 random_crop: False  # Set to false when dataset is 'celebahq', meaning only resize the images to img_shapes, instead of crop img_shapes from a larger raw image. This is useful when you train on images with different resolutions like places2. In these cases, please set random_crop to true.
 val: False  # true if you want to view validation results in tensorboard
-log_dir: logs/srtm_aus_test
+log_dir: logs/srtm_aus_mountainous
 
 gan: 'sngan'
 gan_loss_alpha: 1
@@ -22,38 +22,22 @@ random_seed: False
 padding: 'SAME'
 
 # training
-train_spe: 6
+train_spe : 100
 max_iters: 1000000
 viz_max_out: 10
-val_psteps: 1
+val_psteps: 50
 
 # data
 data_flist:
-    srtm_aus: [
+    srtm_aus_mountainous: [
         'data/train.flist',
         'data/validation.flist',
     ]
-#   # https://github.com/jiahuiyu/progressive_growing_of_gans_tf
-#   celebahq: [
-#     'data/celeba_hq/train_shuffled.flist',
-#     'data/celeba_hq/validation_static_view.flist'
-#   ]
-#   # http://mmlab.ie.cuhk.edu.hk/projects/celeba.html, please to use random_crop: True
-#   celeba: [
-#     'data/celeba/train_shuffled.flist',
-#     'data/celeba/validation_static_view.flist'
-#   ]
-#   # http://places2.csail.mit.edu/, please download the high-resolution dataset and use random_crop: True
-#   places2: [
-#     'data/places2/train_shuffled.flist',
-#     'data/places2/validation_static_view.flist'
-#   ]
-#   # http://www.image-net.org/, please use random_crop: True
-#   imagenet: [
-#     'data/imagenet/train_shuffled.flist',
-#     'data/imagenet/validation_static_view.flist',
-#   ]
-  
+    srtm_aus_filternoise: [
+        'data/filternoise/train.flist',
+        'data/filternoise/validation.flist' 
+    ]
+ 
 
 static_view_size: 30
 img_shapes: [128, 128, 1]
@@ -61,16 +45,16 @@ height: 128
 width: 128
 max_delta_height: 32
 max_delta_width: 32
-batch_size: 16
+batch_size: 32
 vertical_margin: 0
 horizontal_margin: 0
-min_dem: -65
+min_dem: -94
 max_dem: 2225
 
 # loss
 ae_loss: True
 l1_loss: True
-l1_loss_alpha: 1
+l1_loss_alpha: 1 #0.5
 
 # to tune
 guided: False

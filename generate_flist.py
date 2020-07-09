@@ -34,12 +34,13 @@ def write_flist(src, dest, is_val):
     print('Reading from ', os.path.join(src))
     files = glob.glob(os.path.join(src, '*.tif'))
     files = list(map(lambda f: os.path.abspath(f), files))
-    
+    #files = files[:1000]
     train_fname = os.path.join(dest, 'train.flist')
 
     if is_val:
         val_fname = os.path.join(dest, 'validation.flist')
         ftrain, fval = train_test_split(files, test_size=0.1, shuffle=True)
+        print('Train size: {}/ Val size {}'.format(len(ftrain), len(fval)))
     
         print('Writing to {}'.format(train_fname))
         fo = open(train_fname, "w")
@@ -65,6 +66,15 @@ def write_flist_test(src, fout):
     fo = open(os.path.join(fout, 'test.flist'), "w")
     fo.write("\n".join(lines))
     fo.close()
+
+def cmask(filename):
+    f = open(filename, 'r')
+    files = f.read().split('\n')
+    f.close()
+    masks = list(map(lambda f: f[:-4]+'mask.png', files))
+    f = open(filename[:-6]+'_mask.flist', 'w')
+    f.write('\n'.join(masks))
+    f.close()
     
 
 if __name__ == "__main__":
