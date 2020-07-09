@@ -6,7 +6,7 @@ import cv2
 import numpy as np
 import tensorflow as tf
 import neuralgym as ng
-
+import sklearn.metrics as mt
 from inpaint_model import InpaintCAModel
 
 
@@ -41,9 +41,11 @@ if __name__ == "__main__":
     input_image_ph = tf.placeholder(
         tf.float32, shape=(1, args.image_height, args.image_width*2, 1))
     output = model.build_server_graph(FLAGS, input_image_ph)
-    output = (output + 1.) * 127.5
+    minV = FLAGS.min_dem
+    maxV = FLAGS.max_dem
+    output = (output + 1.)*(maxV - minV)/2 + minV
     output = tf.reverse(output, [-1])
-#     output = tf.saturate_cast(output, tf.uint8)
+    #output = tf.saturate_cast(output, tf.uint8)
     vars_list = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
     assign_ops = []
     for var in vars_list:
@@ -58,30 +60,19 @@ if __name__ == "__main__":
     with open(args.flist, 'r') as f:
         lines = f.read().splitlines()
     t = time.time()
+    rmse = []
     for line in lines:
     # for i in range(100):
         image, mask, out = line.split()
         base = os.path.basename(mask)
-
         image = cv2.imread(image, -1)
-        im_min = image.min()
-        im_max = image.max()
-        image = cv2.normalize(image, None, 255, 0, cv2.NORM_MINMAX, cv2.CV_32F)
         if len(image.shape) < 3:
             image = image[..., np.newaxis]
-        
         mask = cv2.imread(mask, -1)
         if len(mask.shape) == 3:
             mask = mask[:, :, 0]
         if len(mask.shape) < 3:
             mask = mask[..., np.newaxis]
-        # image = cv2.resize(image, (args.image_width, args.image_height))
-        # mask = cv2.resize(mask, (args.image_width, args.image_height))
-        # cv2.imwrite(out, image*(1-mask/255.) + mask)
-        # # continue
-        # image = np.zeros((128, 256, 3))
-        # mask = np.zeros((128, 256, 3))
-
         assert image.shape == mask.shape
 
         h, w, _ = image.shape
@@ -98,7 +89,8 @@ if __name__ == "__main__":
         result = sess.run(output, feed_dict={input_image_ph: input_image})
         print('Processed: {}'.format(out))
         result = result[0][:, :, ::-1]
-        result = (im_max-im_min)*(result - result.min())/(result.max()-result.min()) + im_min
+        rmse.append(mt.mean_squared_error(image.ravel(), result.ravel())**0.5)
         cv2.imwrite(out, result)
 
+    print('RMSE: ', np.mean(rmse))
     print('Time total: {}'.format(time.time() - t))

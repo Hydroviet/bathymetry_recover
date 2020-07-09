@@ -41,7 +41,7 @@ class InpaintCAModel(Model):
         x = tf.concat([x, ones_x, ones_x*mask], axis=3)
 
         # two stage network
-        cnum = 48
+        cnum = 24 #48
         with tf.variable_scope(name, reuse=reuse), \
                 arg_scope([gen_conv, gen_deconv],
                           training=training, padding=padding):
@@ -111,7 +111,7 @@ class InpaintCAModel(Model):
 
     def build_sn_patch_gan_discriminator(self, x, reuse=False, training=True):
         with tf.variable_scope('sn_patch_gan', reuse=reuse):
-            cnum = 64
+            cnum = 32 #64
             x = dis_conv(x, cnum, name='conv1', training=training)
             x = dis_conv(x, cnum*2, name='conv2', training=training)
             x = dis_conv(x, cnum*4, name='conv3', training=training)
@@ -240,7 +240,8 @@ class InpaintCAModel(Model):
         #batch_pos = batch_data / 127.5 - 1.
         minV = FLAGS.min_dem
         maxV = FLAGS.max_dem
-        batch_pos = 2*(batch_data - minV)/ (maxV - minV) - 1.
+        batch_pos = 2*(batch_raw - minV)/ (maxV - minV) - 1.
+        #batch_pos = 2*(batch_raw + 1)/2290 - 1
         
         batch_incomplete = batch_pos * (1. - masks)
         xin = batch_incomplete

@@ -64,7 +64,7 @@ max_delta_width: 32
 batch_size: 16
 vertical_margin: 0
 horizontal_margin: 0
-min_dem: -65
+min_dem: -94
 max_dem: 2225
 
 # loss
