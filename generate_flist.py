@@ -28,6 +28,13 @@ parser.add_argument('--test',type=str2bool, nargs='?',
                         const=True, default=False,
                     help='True if generate flist for test')
 
+
+def cmask(files, fname):
+    masks = list(map(lambda f: f[:-4]+'mask.png', files))
+    f = open(fname, 'w')
+    f.write('\n'.join(masks))
+    f.close()
+
 def write_flist(src, dest, is_val):
     files = []
     filename = ''
@@ -46,15 +53,21 @@ def write_flist(src, dest, is_val):
         fo = open(train_fname, "w")
         fo.write("\n".join(ftrain))
         fo.close()
+        print('Create mask for train:' )
+        cmask(ftrain, train_fname[:-6]+'_mask.flist')
+        
         print('Writing to {}'.format(val_fname))
         fo = open(val_fname, "w")
         fo.write("\n".join(fval))
         fo.close()    
+        print('Create maks for val:')
+        cmask(fval, val_fname[:-6]+'_mask.flist') 
     else:
         print('Writing to {}'.format(train_fname))
         fo = open(train_fname, "w")
         fo.write("\n".join(files))
         fo.close()
+        cmask(files, train_fname[:-6]+'_mask.flist')
         
 def write_flist_test(src, fout):
     
@@ -67,15 +80,6 @@ def write_flist_test(src, fout):
     fo.write("\n".join(lines))
     fo.close()
 
-def cmask(filename):
-    f = open(filename, 'r')
-    files = f.read().split('\n')
-    f.close()
-    masks = list(map(lambda f: f[:-4]+'mask.png', files))
-    f = open(filename[:-6]+'_mask.flist', 'w')
-    f.write('\n'.join(masks))
-    f.close()
-    
 
 if __name__ == "__main__":
     args = parser.parse_args()

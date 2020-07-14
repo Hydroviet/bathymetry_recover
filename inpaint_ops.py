@@ -274,7 +274,7 @@ def contextual_attention(f, b, mask=None, ksize=3, stride=1, rate=1,
         tf.Tensor: output
 
     """
-    print('Raw shape: f, b, mask', f.shape, b.shape, mask.shape)
+    #print('Raw shape: f, b, mask', f.shape, b.shape, mask.shape)
     # get shapes
     raw_fs = tf.shape(f)
     raw_int_fs = f.get_shape().as_list()

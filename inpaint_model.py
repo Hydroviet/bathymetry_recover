@@ -41,7 +41,7 @@ class InpaintCAModel(Model):
         x = tf.concat([x, ones_x, ones_x*mask], axis=3)
 
         # two stage network
-        cnum = 24 #48
+        cnum = 48
         with tf.variable_scope(name, reuse=reuse), \
                 arg_scope([gen_conv, gen_deconv],
                           training=training, padding=padding):
@@ -111,7 +111,7 @@ class InpaintCAModel(Model):
 
     def build_sn_patch_gan_discriminator(self, x, reuse=False, training=True):
         with tf.variable_scope('sn_patch_gan', reuse=reuse):
-            cnum = 32 #64
+            cnum = 64
             x = dis_conv(x, cnum, name='conv1', training=training)
             x = dis_conv(x, cnum*2, name='conv2', training=training)
             x = dis_conv(x, cnum*4, name='conv3', training=training)
@@ -135,10 +135,10 @@ class InpaintCAModel(Model):
         mask /= 255 #(batch_size, 256, 256, 1)
         mask = tf.cast(mask > 0.5, tf.float32)
         # Normalize min max to [-1, 1]
-        #batch_pos = batch_data / 127.5 - 1.
-        minV = FLAGS.min_dem
-        maxV = FLAGS.max_dem
-        batch_pos = 2*(batch_data - minV)/ (maxV - minV) - 1.
+        batch_pos = batch_data / 127.5 - 1.
+        #minV = FLAGS.min_dem
+        #maxV = FLAGS.max_dem
+        #batch_pos = 2*(batch_data - minV)/ (maxV - minV) - 1.
         
         batch_incomplete = batch_pos*(1.-mask)
         xin = batch_incomplete
@@ -198,10 +198,10 @@ class InpaintCAModel(Model):
         mask /= 255 #(batch_size, 256, 256, 1)
         mask = tf.cast(mask > 0.5, tf.float32)
         # Normalize min max to [-1, 1]
-        #batch_pos = batch_data / 127.5 - 1.
-        minV = FLAGS.min_dem
-        maxV = FLAGS.max_dem
-        batch_pos = 2*(batch_data - minV)/ (maxV - minV) - 1.
+        batch_pos = batch_data / 127.5 - 1.
+        #minV = FLAGS.min_dem
+        #maxV = FLAGS.max_dem
+        #batch_pos = 2*(batch_data - minV)/ (maxV - minV) - 1.
         
         batch_incomplete = batch_pos*(1.-mask)
         xin = batch_incomplete
@@ -212,19 +212,17 @@ class InpaintCAModel(Model):
         batch_predicted = x2
         # apply mask and reconstruct
         batch_complete = batch_predicted*mask + batch_incomplete*(1.-mask)
-        # global image visualization
+       # local patches
+        loss = FLAGS.l1_loss_alpha * tf.reduce_mean(tf.abs(batch_pos - x1))
+        loss += FLAGS.l1_loss_alpha * tf.reduce_mean(tf.abs(batch_pos - x2))
+        scalar_summary('losses/ae_loss_'+name, loss)
         viz_img = [batch_pos, batch_incomplete, batch_complete]
-#         if offset_flow is not None:
-#             viz_img.append(
-#                 resize(offset_flow, scale=4,
-#                        func=tf.image.resize_bilinear))
-
-        images_summary(
-            tf.concat(viz_img, axis=2),
-            name+'_raw_incomplete_complete', FLAGS.viz_max_out)
+            #images_summary(
+            #    tf.concat(viz_img, axis=2),
+            #    name+'_raw_incomplete_predicted_complete', FLAGS.viz_max_out)
         return batch_complete
 
-    def build_static_infer_graph(self, FLAGS, batch_data, name):
+    def build_static_infer_graph(self, FLAGS, batch_data, name='val'):
         """
         """
         return self.build_infer_graph(FLAGS, batch_data, name)
@@ -237,11 +235,10 @@ class InpaintCAModel(Model):
         batch_raw, masks_raw = tf.split(batch_data, 2, axis=2)
         masks = tf.cast(masks_raw[0:1, :, :, 0:1] > 127.5, tf.float32)
         # Normalize min max to [-1, 1]
-        #batch_pos = batch_data / 127.5 - 1.
-        minV = FLAGS.min_dem
-        maxV = FLAGS.max_dem
-        batch_pos = 2*(batch_raw - minV)/ (maxV - minV) - 1.
-        #batch_pos = 2*(batch_raw + 1)/2290 - 1
+        batch_pos = batch_raw / 127.5 - 1.
+        #minV = FLAGS.min_dem
+        #maxV = FLAGS.max_dem
+        #batch_pos = 2*(batch_raw - minV)/ (maxV - minV) - 1.
         
         batch_incomplete = batch_pos * (1. - masks)
         xin = batch_incomplete

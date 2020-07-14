@@ -78,7 +78,7 @@ def read_batch(src, dest, batch_size=8, nthreads=8):
     for i in tqdm(range(num//batch_size)):
         imgs = list(sess.run(batch_data))
         imgs = preprocess(imgs)
-        gen_mask_batch(imgs, dest, batch_size*i)
+        gen_mask_batch(imgs, dest, batch_size*i + 6000)
     print('Total time {}'.format(time.time() - stime))
     
 if __name__ == "__main__":

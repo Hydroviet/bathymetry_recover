@@ -41,19 +41,14 @@ if __name__ == "__main__":
     model = InpaintCAModel()
     g_vars, d_vars, losses = model.build_graph_with_losses(FLAGS, batch_data)
     # validation images
-    if FLAGS.val:
-        with open(FLAGS.data_flist[FLAGS.dataset][1]) as f:
-            val_fnames = f.read().splitlines()
-        val_fnames = [(fname, fname[:-4] + 'mask.png') for fname in val_fnames]
-
-        # progress monitor by visualizing static images
-        for i in range(FLAGS.static_view_size):
-            static_fnames = val_fnames[i:i+1]
-            static_images = ng.data.DataFromFNames(
-                static_fnames, img_shapes, nthreads=1,
-                random_crop=FLAGS.random_crop).data_pipeline(1)
-            static_inpainted_images = model.build_static_infer_graph(
-                FLAGS, static_images, name='static_view/%d' % i)
+    with open(FLAGS.data_flist[FLAGS.dataset][1]) as f:
+        val_fnames = f.read().splitlines()
+    val_fnames = [(fname, fname[:-4] + 'mask.png') for fname in val_fnames]
+    batch_val = ng.data.DataFromFNames(
+            val_fnames, img_shapes, nthreads=FLAGS.num_cpus_per_job,
+            random_crop = FLAGS.random_crop).data_pipeline(FLAGS.batch_size)
+    batch_val_complete = model.build_infer_graph(FLAGS, batch_val)
+    num_iters_val = len(val_fnames)//FLAGS.batch_size        
     # training settings
     lr = tf.get_variable(
         'lr', shape=[], trainable=False,
@@ -96,6 +91,7 @@ if __name__ == "__main__":
         ng.callbacks.ModelRestorer(trainer.context['saver'], dump_prefix=FLAGS.model_restore+'/snap', optimistic=True),
         ng.callbacks.ModelSaver(FLAGS.train_spe, trainer.context['saver'], FLAGS.log_dir+'/snap'),
         ng.callbacks.SummaryWriter((FLAGS.val_psteps//1), trainer.context['summary_writer'], tf.summary.merge_all()),
+        #ng.callbacks.EarlyStopper(FLAGS.train_spe, model, batch_val, num_iters_val, FLAGS),
     ])
     # launch training
     trainer.train()
