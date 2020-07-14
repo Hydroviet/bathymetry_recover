@@ -26,9 +26,11 @@ if __name__ == "__main__":
 
     model = InpaintCAModel()
     image = cv2.imread(args.image, -1)
+    im_min = image.min()
+    im_max = image.max()
+    image = cv2.normalize(image, None, 255, 0, cv2.NORM_MINMAX, cv2.CV_32F)
     if len(image.shape) < 3:
         image = image[..., np.newaxis]
-        
     mask = cv2.imread(args.mask, -1)
     if len(mask.shape) == 3:
         mask = mask[:, :, 0]
@@ -52,9 +54,10 @@ if __name__ == "__main__":
     with tf.Session(config=sess_config) as sess:
         input_image = tf.constant(input_image, dtype=tf.float32)
         output = model.build_server_graph(FLAGS, input_image)
-        minV = FLAGS.min_dem
-        maxV = FLAGS.max_dem
-        output = (output + 1.)*(maxV - minV)/2 + minV
+        output = (output + 1.) * 127.5
+#         minV = FLAGS.min_dem
+#         maxV = FLAGS.max_dem
+#         output = (output + 1.)*(maxV - minV)/2 + minV
         output = tf.reverse(output, [-1])
 #         output = tf.saturate_cast(output, tf.uint8)
         # load pretrained model
@@ -70,4 +73,5 @@ if __name__ == "__main__":
         print('Model loaded.')
         result = sess.run(output)
         result = result[0][:, :, ::-1]
+        result = (im_max-im_min)*(result - result.min())/(result.max()-result.min()) + im_min
         cv2.imwrite(args.output, result)
