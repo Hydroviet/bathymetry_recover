@@ -41,7 +41,7 @@ class InpaintCAModel(Model):
         x = tf.concat([x, ones_x, ones_x*mask], axis=3)
 
         # two stage network
-        cnum = 48
+        cnum = 24 #48
         with tf.variable_scope(name, reuse=reuse), \
                 arg_scope([gen_conv, gen_deconv],
                           training=training, padding=padding):
@@ -56,7 +56,10 @@ class InpaintCAModel(Model):
             x = gen_conv(x, 4*cnum, 3, rate=2, name='conv7_atrous')
             x = gen_conv(x, 4*cnum, 3, rate=4, name='conv8_atrous')
             x = gen_conv(x, 4*cnum, 3, rate=8, name='conv9_atrous')
-            x = gen_conv(x, 4*cnum, 3, rate=16, name='conv10_atrous')
+            #x = gen_conv(x, 4*cnum, 3, rate=16, name='conv10_atrous')
+            x = gen_conv(x, 4*cnum, 3, rate=8, name='lfe_conv7_atrous')
+            x = gen_conv(x, 4*cnum, 3, rate=4, name='lfe_conv8_atrous')
+            x = gen_conv(x, 4*cnum, 3, rate=2, name='lfe_conv9_atrous')
             x = gen_conv(x, 4*cnum, 3, 1, name='conv11')
             x = gen_conv(x, 4*cnum, 3, 1, name='conv12')
             x = gen_deconv(x, 2*cnum, name='conv13_upsample')
@@ -82,7 +85,10 @@ class InpaintCAModel(Model):
             x = gen_conv(x, 4*cnum, 3, rate=2, name='xconv7_atrous')
             x = gen_conv(x, 4*cnum, 3, rate=4, name='xconv8_atrous')
             x = gen_conv(x, 4*cnum, 3, rate=8, name='xconv9_atrous')
-            x = gen_conv(x, 4*cnum, 3, rate=16, name='xconv10_atrous')
+            x = gen_conv(x, 4*cnum, 3, rate=8, name='lfe_xconv7_atrous')
+            x = gen_conv(x, 4*cnum, 3, rate=4, name='lfe_xconv8_atrous')
+            x = gen_conv(x, 4*cnum, 3, rate=2, name='lfe_xconv9_atrous')
+            #x = gen_conv(x, 4*cnum, 3, rate=16, name='xconv10_atrous')
             x_hallu = x
             # attention branch
             x = gen_conv(xnow, cnum, 5, 1, name='pmconv1')
@@ -111,7 +117,7 @@ class InpaintCAModel(Model):
 
     def build_sn_patch_gan_discriminator(self, x, reuse=False, training=True):
         with tf.variable_scope('sn_patch_gan', reuse=reuse):
-            cnum = 64
+            cnum = 48 #64
             x = dis_conv(x, cnum, name='conv1', training=training)
             x = dis_conv(x, cnum*2, name='conv2', training=training)
             x = dis_conv(x, cnum*4, name='conv3', training=training)
