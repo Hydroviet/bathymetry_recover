@@ -12,7 +12,7 @@ import neuralgym as ng
 import tensorflow as tf
 from tqdm import tqdm
 
-D_LEVEL = 5
+D_LEVEL = 50
 
 def get_mask(img, level):
     mask = (img <= level)*1
@@ -30,7 +30,7 @@ def get_mask(img, level):
 def adjust_level(img, level, size, dlevel=5, min_size=64*64, max_size=128*128):
     masks = []
     avaiable_size = [size]
-    for hi in range(int(level) - dlevel, int(level) + dlevel):
+    for hi in range(int(level) - dlevel, int(level) + dlevel, 10):
         m = get_mask(img, hi)
         if m[0] not in avaiable_size and m[0] >= min_size and m[0] <= max_size:
             masks.append(m[1])
@@ -87,13 +87,13 @@ def gen_mask_batch(batch_data, dest, start):
                 indx = write_to_disk(img, mask, dest, indx)
     return indx
 
-def read_batch(src, dest, batch_size=8, nthreads=1):
+def read_batch(src, dest, batch_size=8, nthreads=8):
     print(src, dest)
     if not os.path.exists(dest):
         os.mkdir(dest)
         
     print('Read from: ', src)
-    files = glob.glob(os.path.join(src, '*.tif'))
+    files = glob.glob(os.path.join(src, '*.tif'))[:3200]
     num = len(files)
     data = ng.data.DataFromFNames(files, [256, 256, 1], nthreads=nthreads)
     batch_data = data.data_pipeline(batch_size)
