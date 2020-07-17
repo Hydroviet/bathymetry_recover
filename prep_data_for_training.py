@@ -59,7 +59,7 @@ def gen_mask_batch(batch_data, dest, start):
 
 def preprocess(imgs):
     pimgs = list(map(lambda img: cv2.medianBlur(img, 5), imgs))
-    pimgs = list(filter(lambda img: np.quantile(img, 0.90) - np.quantile(img, 0.5) >= 30 and img.min() >= 5, imgs))
+    pimgs = list(filter(lambda img: np.quantile(img, 0.90) - np.quantile(img, 0.05) >= 30 and img.min() >= 5, imgs))
     return pimgs
 
 def read_batch(src, dest, batch_size=8, nthreads=8):
@@ -78,14 +78,14 @@ def read_batch(src, dest, batch_size=8, nthreads=8):
     for i in tqdm(range(num//batch_size)):
         imgs = list(sess.run(batch_data))
         imgs = preprocess(imgs)
-        gen_mask_batch(imgs, dest, batch_size*i + 6000)
+        gen_mask_batch(imgs, dest, batch_size*i)
     print('Total time {}'.format(time.time() - stime))
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--src', default='', type=str, help='Path store source data')
     parser.add_argument('--dest', default='', type=str, help='Path store generated data')
-    parser.add_argument('--batch_size', default='', type=str, help='Path store generated data')
+    parser.add_argument('--batch_size', default='', type=str, help='Batch size to read data')
     args = parser.parse_args()
     read_batch(args.src, args.dest, int(args.batch_size))
     
