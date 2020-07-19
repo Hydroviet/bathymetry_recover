@@ -1,19 +1,4 @@
-# Generative Image Inpainting
-
-![version](https://img.shields.io/badge/version-v2.0.0-green.svg?style=plastic)
-![pytorch](https://img.shields.io/badge/tensorflow-v1.7.0-green.svg?style=plastic)
-![license](https://img.shields.io/badge/license-CC_BY--NC-green.svg?style=plastic)
-
-An open source framework for generative image inpainting task, with the support of [Contextual Attention](https://arxiv.org/abs/1801.07892) (CVPR 2018) and [Gated Convolution](https://arxiv.org/abs/1806.03589) (ICCV 2019 Oral).
-
-**For the code of previous version (DeepFill v1), please checkout branch [v1.0.0](https://github.com/JiahuiYu/generative_inpainting/tree/v1.0.0).**
-
-[CVPR 2018 Paper](https://arxiv.org/abs/1801.07892) | [ICCV 2019 Oral Paper](https://arxiv.org/abs/1806.03589) | [Project](http://jiahuiyu.com/deepfill) | [Demo](http://jiahuiyu.com/deepfill) | [YouTube v1](https://youtu.be/xz1ZvcdhgQ0) | [YouTube v2](https://youtu.be/uZkEi9Y2dj4) | [BibTex](#citing)
-
-<img src="https://raw.githubusercontent.com/JiahuiYu/generative_inpainting/v2.0.0/examples/places2/case1_raw.png" width="33%"/> <img src="https://raw.githubusercontent.com/JiahuiYu/generative_inpainting/v2.0.0/examples/places2/case1_input.png" width="33%"/> <img src="https://raw.githubusercontent.com/JiahuiYu/generative_inpainting/v2.0.0/examples/places2/case1_output.png" width="33%"/>
-<img src="https://raw.githubusercontent.com/JiahuiYu/generative_inpainting/v2.0.0/examples/places2/case4_raw.png" width="33%"/> <img src="https://raw.githubusercontent.com/JiahuiYu/generative_inpainting/v2.0.0/examples/places2/case4_input.png" width="33%"/> <img src="https://raw.githubusercontent.com/JiahuiYu/generative_inpainting/v2.0.0/examples/places2/case4_output.png" width="33%"/>
-
-Free-form image inpainting results by our system built on gated convolution. Each triad shows original image, free-form input and our result from left to right.
+# Bathymetry Recovering
 
 ## Run
 
@@ -58,19 +43,6 @@ CC 4.0 Attribution-NonCommercial International
 
 The software is for educational and academic research purposes only.
 
-## Citing
-```
-@article{yu2018generative,
-  title={Generative Image Inpainting with Contextual Attention},
-  author={Yu, Jiahui and Lin, Zhe and Yang, Jimei and Shen, Xiaohui and Lu, Xin and Huang, Thomas S},
-  journal={arXiv preprint arXiv:1801.07892},
-  year={2018}
-}
+## Acknowledgements
 
-@article{yu2018free,
-  title={Free-Form Image Inpainting with Gated Convolution},
-  author={Yu, Jiahui and Lin, Zhe and Yang, Jimei and Shen, Xiaohui and Lu, Xin and Huang, Thomas S},
-  journal={arXiv preprint arXiv:1806.03589},
-  year={2018}
-}
-```
+We adapted the GitHub repository generative_inpainting to the setting of Digital Elevation Models. 
