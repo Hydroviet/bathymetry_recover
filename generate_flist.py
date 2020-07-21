@@ -46,7 +46,7 @@ def write_flist(src, dest, is_val):
 
     if is_val:
         val_fname = os.path.join(dest, 'validation.flist')
-        ftrain, fval = train_test_split(files, test_size=0.1, shuffle=True)
+        ftrain, fval = train_test_split(files, test_size=0.4, shuffle=True)
         print('Train size: {}/ Val size {}'.format(len(ftrain), len(fval)))
     
         print('Writing to {}'.format(train_fname))
