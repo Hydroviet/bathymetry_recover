@@ -27,6 +27,8 @@ parser.add_argument('--val',type=str2bool, nargs='?',
 parser.add_argument('--test',type=str2bool, nargs='?',
                         const=True, default=False,
                     help='True if generate flist for test')
+parser.add_argument('--fname', default='', type=str,
+                    help='File name in case no split train/val')
 
 
 def cmask(files, fname):
@@ -35,18 +37,17 @@ def cmask(files, fname):
     f.write('\n'.join(masks))
     f.close()
 
-def write_flist(src, dest, is_val):
+def write_flist(src, dest, is_val, fname=""):
     files = []
     filename = ''
     print('Reading from ', os.path.join(src))
     files = glob.glob(os.path.join(src, '*.tif'))
     files = list(map(lambda f: os.path.abspath(f), files))
     #files = files[:1000]
-    train_fname = os.path.join(dest, 'train.flist')
-
     if is_val:
+        train_fname = os.path.join(dest, 'train.flist')
         val_fname = os.path.join(dest, 'validation.flist')
-        ftrain, fval = train_test_split(files, test_size=0.4, shuffle=True)
+        ftrain, fval = train_test_split(files, test_size=0.1, shuffle=True)
         print('Train size: {}/ Val size {}'.format(len(ftrain), len(fval)))
     
         print('Writing to {}'.format(train_fname))
@@ -63,11 +64,12 @@ def write_flist(src, dest, is_val):
         print('Create maks for val:')
         cmask(fval, val_fname[:-6]+'_mask.flist') 
     else:
-        print('Writing to {}'.format(train_fname))
-        fo = open(train_fname, "w")
+        fname = os.path.join(dest, fname)
+        print('Writing to {}'.format(fname))
+        fo = open(fname, "w")
         fo.write("\n".join(files))
         fo.close()
-        cmask(files, train_fname[:-6]+'_mask.flist')
+        cmask(files, fname[:-6]+'_mask.flist')
         
 def write_flist_test(src, fout):
     
@@ -89,6 +91,6 @@ if __name__ == "__main__":
     if args.test:
         write_flist_test(args.src, args.dest)
     else:
-        write_flist(args.src, args.dest, args.val)
+        write_flist(args.src, args.dest, args.val, args.fname)
     
 

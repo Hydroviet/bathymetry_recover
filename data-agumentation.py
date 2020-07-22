@@ -32,7 +32,7 @@ def get_depth(img, mask):
     m[m==0] = np.nan
     return np.nanmax(m) - np.nanmin(m)
             
-def adjust_level(img, level, size, dlevel=5, min_size=64*64, max_size=128*128, max_depth=50):
+def adjust_level(img, level, size, dlevel, min_size=64*64, max_size=128*128, max_depth=50):
     masks = []
     avaiable_size = [size]
     for hi in range(int(level) - dlevel, int(level) + dlevel, 10):
@@ -75,6 +75,13 @@ def rotate(img, mask):
         rmask = cv2.rotate(mask, ang)
         yield (rimg, rmask)
 
+def flip(img, mask):
+    mask = mask*255
+    for fcode in range(-1, 1, 1):
+        fimg = cv2.flip(img, fcode)
+        fmask = cv2.flip(mask, fcode)
+        yield (fimg, fmask)
+
 def write_to_disk(img, mask, dest, indx):
     for rim, rmask in rotate(img, mask):
         filename_input = os.path.join(dest, '{}.tif'.format(str(indx).zfill(6)))
@@ -84,8 +91,17 @@ def write_to_disk(img, mask, dest, indx):
         if not cv2.imwrite(filename_mask, rmask):
             print('Error writing mask file {}'.format(filename_mask))
         indx = indx + 1
+
+    for fim, fmask in flip(img, mask):
+        filename_input = os.path.join(dest, '{}.tif'.format(str(indx).zfill(6)))
+        filename_mask = os.path.join(dest, '{}mask.png'.format(str(indx).zfill(6)))
+        if not cv2.imwrite(filename_input, fim):
+            print('Error writing file {}'.format(filename_input))
+        if not cv2.imwrite(filename_mask, fmask):
+            print('Error writing mask file {}'.format(filename_mask))
+        indx = indx + 1
     return indx
-                        
+
 def gen_mask_batch(batch_data, dest, start):
     indx = start
     for data in batch_data:
@@ -110,7 +126,7 @@ def read_batch(src, dest, batch_size=8, nthreads=8):
     stime = time.time()
     for i in tqdm(range(num//batch_size)):
         imgs = list(sess.run(batch_data))
-        gen_mask_batch(imgs, dest, i*batch_size*D_LEVEL*2*4)
+        gen_mask_batch(imgs, dest, i*batch_size*10*7)
     print('Total time {}'.format(time.time() - stime))
     
 if __name__ == "__main__":
