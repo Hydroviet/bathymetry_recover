@@ -11,7 +11,7 @@ name: srtm_aus  # any name
 model_restore: '' #'logs/srtm_aus_mountainous_6k'  # logs/places2_gated_conv
 dataset: 'srtm_aus_mountainous'  # 'tmnist', 'dtd', 'places2', 'celeba', 'imagenet', 'cityscapes'
 random_crop: False  # Set to false when dataset is 'celebahq', meaning only resize the images to img_shapes, instead of crop img_shapes from a larger raw image. This is useful when you train on images with different resolutions like places2. In these cases, please set random_crop to true.
-val: False  # true if you want to view validation results in tensorboard
+val: True  # true if you want to view validation results in tensorboard
 log_dir: logs/aus_depth_local
 
 gan: 'sngan'
@@ -30,8 +30,8 @@ val_psteps: 500
 # data
 data_flist:
     srtm_aus_mountainous: [
-        'data/flist/aus/train.flist',
-        'data/flist/aus/validation.flist',
+        'data/flist/aus_depth/train.flist',
+        'data/flist/aus_depth/validation.flist',
     ]
  
 
