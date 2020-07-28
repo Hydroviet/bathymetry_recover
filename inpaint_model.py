@@ -129,13 +129,13 @@ class InpaintCAModel(Model):
                 batch, reuse=reuse, training=training)
             return d
         
-    def normalize_min_max(batch_data, mask, new_min, new_max):
-        is_in_mask = tf.equal(mask, tf.constant(1)) 
+    def normalize_min_max(self, batch_data, mask, new_min, new_max):
+        is_in_mask = tf.equal(mask, tf.constant(1., dtype=tf.float32))
         mask = batch_data * mask
-        vmax_mask = tf.math.maximum(mask)
-        data = tf.where(is_in_mask, vmax_mask, batch_data)
-        vmin = tf.math.minimum(data)
-        vmax = tf.math.maximum(data)
+        vmax_mask = tf.reduce_max(mask)
+        data = tf.where(is_in_mask, tf.fill(batch_data.shape, vmax_mask), batch_data)
+        vmin = tf.reduce_min(data)
+        vmax = tf.reduce_max(data)
         return (new_max - new_min)*(batch_data - vmin)/(vmax - vmin) + new_min        
 
     def build_graph_with_losses(
@@ -145,7 +145,8 @@ class InpaintCAModel(Model):
         mask = tf.cast(mask > 127.5, tf.float32)
         
         # Normalize min max to [-1, 1]
-        batch_pos = normalize_min_max(batch_data, mask, -1, 1)
+        batch_pos = self.normalize_min_max(batch_data, mask, -1., 1.)
+        #assert tf.reduce_any(tf.is_nan(batch_pos))
         # batch_pos = batch_data / 127.5 - 1.
         #minV = FLAGS.min_dem
         #maxV = FLAGS.max_dem
@@ -206,12 +207,10 @@ class InpaintCAModel(Model):
         """
         """
         batch_data, mask = batch_data
-        mask /= 255 #(batch_size, 256, 256, 1)
-        mask = tf.cast(mask > 0.5, tf.float32)
+        mask = tf.cast(mask > 127.5, tf.float32)
         # Normalize min max to [-1, 1]
-        batch_pos = normalize_min_max(batch_data, mask, -1, 1)
+        batch_pos = self.normalize_min_max(batch_data, mask, -1, 1)
         # batch_pos = batch_data / 127.5 - 1.
-        
         batch_incomplete = batch_pos*(1.-mask)
         xin = batch_incomplete
         # inpaint
@@ -244,9 +243,9 @@ class InpaintCAModel(Model):
         batch_raw, masks_raw = tf.split(batch_data, 2, axis=2)
         masks = tf.cast(masks_raw[0:1, :, :, 0:1] > 127.5, tf.float32)
         # Normalize min max to [-1, 1]
-        batch_pos = normalize_min_max(batch_data, mask, -1, 1)
+        # batch_pos = self.normalize_min_max(batch_data, mask, -1, 1)
         # batch_pos = batch_raw / 127.5 - 1.
-        
+        batch_pos = batch_raw 
         batch_incomplete = batch_pos * (1. - masks)
         xin = batch_incomplete
         # inpaint

@@ -45,7 +45,7 @@ if __name__ == "__main__":
     input_image_ph = tf.placeholder(
         tf.float32, shape=(1, args.image_height, args.image_width*2, 1))
     output = model.build_server_graph(FLAGS, input_image_ph)
-    output = (output + 1.) * 127.5
+    # output = (output + 1.) * 127.5
     #minV = FLAGS.min_dem
     #maxV = FLAGS.max_dem
     #output = (output + 1.)*(maxV - minV)/2 + minV
@@ -63,18 +63,17 @@ if __name__ == "__main__":
     print('Model loaded.')
 
     with open(args.flist, 'r') as f:
-        lines = f.read().splitlines()
+        lines = f.read().splitlines()[:100]
     t = time.time()
     rmses = []
     for line in lines:
-    # for i in range(100):
         image, mask, out = line.split()
         base = os.path.basename(mask)
         image = cv2.imread(image, -1)
         raw_image = image
         im_min = image.min()
         im_max = image.max()
-        image = cv2.normalize(image, None, 255, 0, cv2.NORM_MINMAX, cv2.CV_32F)
+        image = cv2.normalize(image, None, 1, -1, cv2.NORM_MINMAX, cv2.CV_32F)
         if len(image.shape) < 3:
             image = image[..., np.newaxis]
         mask = cv2.imread(mask, -1)
@@ -98,7 +97,8 @@ if __name__ == "__main__":
         result = sess.run(output, feed_dict={input_image_ph: input_image})
         print('Processed: {}'.format(out))
         result = result[0][:, :, ::-1]
-        result = (im_max-im_min)*(result - result.min())/(result.max()-result.min()) + im_min
+        #result = (im_max-im_min)*(result - result.min())/(result.max()-result.min()) + im_min
+        result = (im_max-im_min)*(result +1.)/2 + im_min
         # print(raw_image.shape, result.shape, mask.shape)
         rmse = cal_rmse(raw_image, result[:,:,0], mask[0,:,:,0])
         print('Rmse: {}'.format(rmse))
