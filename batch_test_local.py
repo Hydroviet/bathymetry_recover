@@ -26,6 +26,10 @@ parser.add_argument(
     '--checkpoint_dir', default='', type=str,
     help='The directory of tensorflow checkpoint.')
 
+def cal_rmse(inp, out, mask):
+    diff = ((inp - out) * (mask/255)) ** 2
+    diff[diff == 0] = np.nan
+    return np.nanmean(diff)**0.5
 
 if __name__ == "__main__":
     FLAGS = ng.Config('inpaint.yml')
@@ -61,7 +65,7 @@ if __name__ == "__main__":
     with open(args.flist, 'r') as f:
         lines = f.read().splitlines()
     t = time.time()
-    rmse = []
+    rmses = []
     for line in lines:
     # for i in range(100):
         image, mask, out = line.split()
@@ -95,8 +99,11 @@ if __name__ == "__main__":
         print('Processed: {}'.format(out))
         result = result[0][:, :, ::-1]
         result = (im_max-im_min)*(result - result.min())/(result.max()-result.min()) + im_min
-        rmse.append(mt.mean_squared_error(raw_image.ravel(), result.ravel())**0.5)
+        # print(raw_image.shape, result.shape, mask.shape)
+        rmse = cal_rmse(raw_image, result[:,:,0], mask[0,:,:,0])
+        print('Rmse: {}'.format(rmse))
+        rmses.append(rmse)
         cv2.imwrite(out, result)
 
-    print('RMSE: ', np.mean(rmse))
+    print('RMSE: ', np.mean(rmses))
     print('Time total: {}'.format(time.time() - t))

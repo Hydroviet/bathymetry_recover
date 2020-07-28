@@ -29,21 +29,26 @@ if __name__ == "__main__":
     im_min = image.min()
     im_max = image.max()
     image = cv2.normalize(image, None, 255, 0, cv2.NORM_MINMAX, cv2.CV_32F)
+    ho, wo = image.shape
+    print('Shape of image: {}'.format(image.shape))
+    image = np.pad(image, ((0, 7), (0, 7)), 'symmetric')
     if len(image.shape) < 3:
         image = image[..., np.newaxis]
     mask = cv2.imread(args.mask, -1)
     if len(mask.shape) == 3:
         mask = mask[:, :, 0]
+    mask = np.pad(mask, ((0, 7), (0, 7)), 'symmetric')
     if len(mask.shape) < 3:
         mask = mask[..., np.newaxis]
         
     assert image.shape == mask.shape
 
+    print('Shape of image1: {}'.format(image.shape))
     h, w, _ = image.shape
     grid = 8
     image = image[:h//grid*grid, :w//grid*grid, :]
     mask = mask[:h//grid*grid, :w//grid*grid, :]
-    print('Shape of image: {}'.format(image.shape))
+    print('Shape of image2: {}'.format(image.shape))
 
     image = np.expand_dims(image, 0)
     mask = np.expand_dims(mask, 0)
@@ -74,4 +79,6 @@ if __name__ == "__main__":
         result = sess.run(output)
         result = result[0][:, :, ::-1]
         result = (im_max-im_min)*(result - result.min())/(result.max()-result.min()) + im_min
+        result = result[:ho, :wo, :]
+        print('Result shape: ', result.shape)
         cv2.imwrite(args.output, result)
