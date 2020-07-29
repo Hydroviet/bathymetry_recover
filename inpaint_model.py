@@ -243,9 +243,9 @@ class InpaintCAModel(Model):
         batch_raw, masks_raw = tf.split(batch_data, 2, axis=2)
         masks = tf.cast(masks_raw[0:1, :, :, 0:1] > 127.5, tf.float32)
         # Normalize min max to [-1, 1]
-        # batch_pos = self.normalize_min_max(batch_data, mask, -1, 1)
+        batch_pos = self.normalize_min_max(batch_raw, masks, -1, 1)
         # batch_pos = batch_raw / 127.5 - 1.
-        batch_pos = batch_raw 
+        # batch_pos = batch_raw 
         batch_incomplete = batch_pos * (1. - masks)
         xin = batch_incomplete
         # inpaint

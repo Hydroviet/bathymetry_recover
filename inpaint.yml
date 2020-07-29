@@ -9,10 +9,10 @@ gpu_type: 'nvidia-tesla-p100'
 # parameters
 name: srtm_aus  # any name
 model_restore: '' #'logs/srtm_aus_mountainous_6k'  # logs/places2_gated_conv
-dataset: 'srtm_aus_mountainous'  # 'tmnist', 'dtd', 'places2', 'celeba', 'imagenet', 'cityscapes'
+dataset: 'aus_128'  # 'tmnist', 'dtd', 'places2', 'celeba', 'imagenet', 'cityscapes'
 random_crop: False  # Set to false when dataset is 'celebahq', meaning only resize the images to img_shapes, instead of crop img_shapes from a larger raw image. This is useful when you train on images with different resolutions like places2. In these cases, please set random_crop to true.
 val: True  # true if you want to view validation results in tensorboard
-log_dir: logs/aus_depth_local
+log_dir: logs/aus_local_norm_mask_128
 
 gan: 'sngan'
 gan_loss_alpha: 1
@@ -29,7 +29,11 @@ val_psteps: 500
 
 # data
 data_flist:
-    srtm_aus_mountainous: [
+    aus_128: [
+        'data/flist/aus_depth_128/train.flist',
+        'data/flist/aus_depth_128/validation.flist'
+    ]
+    aus_256: [
         'data/flist/aus_depth/train.flist',
         'data/flist/aus_depth/validation.flist',
     ]
@@ -37,15 +41,13 @@ data_flist:
 
 static_view_size: 30
 img_shapes: [128, 128, 1]
-height: 128
-width: 128
-max_delta_height: 32
-max_delta_width: 32
+# height: 128
+# width: 128
+# max_delta_height: 32
+# max_delta_width: 32
 batch_size: 32
-vertical_margin: 0
-horizontal_margin: 0
-min_dem: -94
-max_dem: 2225
+# vertical_margin: 0
+# horizontal_margin: 0
 
 # loss
 ae_loss: True

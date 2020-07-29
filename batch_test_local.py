@@ -63,7 +63,7 @@ if __name__ == "__main__":
     print('Model loaded.')
 
     with open(args.flist, 'r') as f:
-        lines = f.read().splitlines()[:100]
+        lines = f.read().splitlines()
     t = time.time()
     rmses = []
     for line in lines:
@@ -73,7 +73,7 @@ if __name__ == "__main__":
         raw_image = image
         im_min = image.min()
         im_max = image.max()
-        image = cv2.normalize(image, None, 1, -1, cv2.NORM_MINMAX, cv2.CV_32F)
+        #image = cv2.normalize(image, None, 1, -1, cv2.NORM_MINMAX, cv2.CV_32F)
         if len(image.shape) < 3:
             image = image[..., np.newaxis]
         mask = cv2.imread(mask, -1)
