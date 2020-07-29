@@ -133,7 +133,7 @@ class InpaintCAModel(Model):
         # batch_data, mask: BS x W x H
         is_in_mask = tf.equal(mask, tf.constant(1., dtype=tf.float32)) # BS x W x H
         mask = batch_data * mask # BS x W x H
-        vmax_mask = tf.reduce_max(mask, axis=[1, 2]) # BS
+        vmax_mask = tf.reduce_max(mask, axis=[1, 2], keepdims=True) # BS
         # data = tf.where(is_in_mask, tf.fill(batch_data.shape, vmax_mask), batch_data)
         data = tf.where(is_in_mask, tf.one_likes(batch_data.shape) * vmax_mask, batch_data)
         vmin = tf.reduce_min(data, axis=[1, 2])
