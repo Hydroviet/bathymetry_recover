@@ -130,14 +130,16 @@ class InpaintCAModel(Model):
             return d
         
     def normalize_min_max(self, batch_data, mask, new_min, new_max):
-        is_in_mask = tf.equal(mask, tf.constant(1., dtype=tf.float32))
-        mask = batch_data * mask
-        vmax_mask = tf.reduce_max(mask)
-        data = tf.where(is_in_mask, tf.fill(batch_data.shape, vmax_mask), batch_data)
-        vmin = tf.reduce_min(data)
-        vmax = tf.reduce_max(data)
-        return (new_max - new_min)*(batch_data - vmin)/(vmax - vmin) + new_min        
-
+        # batch_data, mask: BS x W x H
+        is_in_mask = tf.equal(mask, tf.constant(1., dtype=tf.float32)) # BS x W x H
+        mask = batch_data * mask # BS x W x H
+        vmax_mask = tf.reduce_max(mask, axis=[1, 2]) # BS
+        # data = tf.where(is_in_mask, tf.fill(batch_data.shape, vmax_mask), batch_data)
+        data = tf.where(is_in_mask, tf.one_likes(batch_data.shape) * vmax_mask, batch_data)
+        vmin = tf.reduce_min(data, axis=[1, 2])
+        vmax = tf.reduce_max(data, axis=[1, 2])
+        return (new_max - new_min)*(batch_data - vmin)/(vmax - vmin) + new_min
+    
     def build_graph_with_losses(
             self, FLAGS, batch_data, training=True, summary=False,
             reuse=False):
