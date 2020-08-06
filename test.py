@@ -26,6 +26,8 @@ if __name__ == "__main__":
 
     model = InpaintCAModel()
     image = cv2.imread(args.image, -1)
+    original_shape = image.shape
+    image = cv2.resize(image, (image.shape[1]//4, image.shape[0]//4))
     im_min = image.min()
     im_max = image.max()
     image = cv2.normalize(image, None, 255, 0, cv2.NORM_MINMAX, cv2.CV_32F)
@@ -37,6 +39,7 @@ if __name__ == "__main__":
     mask = cv2.imread(args.mask, -1)
     if len(mask.shape) == 3:
         mask = mask[:, :, 0]
+    mask = cv2.resize(mask, (mask.shape[1]//4, mask.shape[0]//4))
     mask = np.pad(mask, ((0, 7), (0, 7)), 'symmetric')
     if len(mask.shape) < 3:
         mask = mask[..., np.newaxis]
@@ -80,5 +83,6 @@ if __name__ == "__main__":
         result = result[0][:, :, ::-1]
         result = (im_max-im_min)*(result - result.min())/(result.max()-result.min()) + im_min
         result = result[:ho, :wo, :]
+        result = cv2.resize(result, original_shape[::-1])
         print('Result shape: ', result.shape)
         cv2.imwrite(args.output, result)
