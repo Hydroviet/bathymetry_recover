@@ -5,6 +5,7 @@ import numpy as np
 import tensorflow as tf
 import neuralgym as ng
 import math
+import rasterio
 from inpaint_model import InpaintCAModel
 
 
@@ -13,17 +14,15 @@ parser.add_argument('--image', default='', type=str,
                     help='The filename of image to be completed.')
 parser.add_argument('--mask', default='', type=str,
                     help='The filename of mask, value 255 indicates mask.')
-parser.add_argument('--tile_height', default=256, type=int, help='Size of tile')
-parser.add_argument('--tile_width', default=256, type=int, help='Size of tile')
+parser.add_argument('--num_tiles_x', default=2, type=int, help='Size of tile')
+parser.add_argument('--num_tiles_y', default=2, type=int, help='Size of tile')
 parser.add_argument('--output', default='output.tif', type=str,
                     help='Where to write output.')
 parser.add_argument('--checkpoint_dir', default='', type=str,
                     help='The directory of tensorflow checkpoint.')
 
 
-def tiling_image(image, tileSizeX=256, tileSizeY=256):
-    numTilesX = 2
-    numTilesY = 2
+def tiling_image(image, numTilesX=2, numTilesY=2):
     tileSizeX = math.ceil(image.shape[1]/numTilesX)
     tileSizeY = math.ceil(image.shape[0]/numTilesY)
     makeLastPartFull = True; # in case you need even siez
@@ -91,9 +90,7 @@ def predict_tile(image, mask, model, reuse=False):
         input_image = tf.constant(input_image, dtype=tf.float32)
         output = model.build_server_graph(FLAGS, input_image,reuse=reuse)
         output = tf.reverse(output, [-1])
-        # load pretrained model
         vars_list = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
-        # print('Checkpoint dir: ', args.checkpoint_dir)
         assign_ops = []
         for var in vars_list:
             vname = var.name
@@ -101,14 +98,27 @@ def predict_tile(image, mask, model, reuse=False):
             var_value = tf.contrib.framework.load_variable(args.checkpoint_dir, from_name)
             assign_ops.append(tf.assign(var, var_value))
         sess.run(assign_ops)
-        # print('Model loaded.')
         result = sess.run(output)
         result = result[0][:, :, ::-1]
-        # result = (im_max-im_min)*(result +1)/2 + im_min
         result = result[:ho, :wo, :]
         result = cv2.resize(result, raw_shape[::-1])
     return result
             
+def read_tif_file(filename):
+    print('Read tif file from: {}'.format(filename))
+    srtm = rasterio.open(filename)
+    kwargs = srtm.meta.copy()
+    return srtm.read(1), kwargs
+
+def write_tif_file(image, filename, kwargs):
+    print('Write tif file to: {}'.format(filename))
+    dtype = kwargs['dtype']
+    image = image.astype(dtype)
+    image = image[np.newaxis, ...]
+    fo = rasterio.open(filename, 'w', **kwargs)
+    fo.write(image)
+    fo.close()
+    
 if __name__ == "__main__":
     FLAGS = ng.Config('inpaint.yml')
     # ng.get_gpus(1)
@@ -119,7 +129,8 @@ if __name__ == "__main__":
     sess = tf.Session(config=sess_config)
 
     model = InpaintCAModel()    
-    image = cv2.imread(args.image, -1)
+    image, meta = read_tif_file(args.image)
+    print('Read mask form {}'.format(args.mask))
     mask = cv2.imread(args.mask, -1)
     if len(mask.shape) == 3:
         mask = mask[:, :, 0]
@@ -127,8 +138,8 @@ if __name__ == "__main__":
     im_max = image.max()
     image = cv2.normalize(image, None, 255, 0, cv2.NORM_MINMAX, cv2.CV_32F)
     
-    image_tiles = tiling_image(image)
-    mask_tiles = tiling_image(mask)
+    image_tiles = tiling_image(image, args.num_tiles_x, args.num_tiles_y)
+    mask_tiles = tiling_image(mask, args.num_tiles_x, args.num_tiles_y)
     result = np.zeros(image.shape)
     ntiles = len(image_tiles)
     for i in range(ntiles):
@@ -144,6 +155,4 @@ if __name__ == "__main__":
         result[startY:endY, startX:endX] = predicted_tile[:,:]
     
     result = (im_max-im_min)*(result - result.min())/(result.max()-result.min()) + im_min
-    # result = (im_max-im_min)*(result +1.)/2 + im_min
-    print('Writing result to {}'.format(args.output))
-    cv2.imwrite(args.output, result)
+    write_tif_file(result, args.output, meta)
