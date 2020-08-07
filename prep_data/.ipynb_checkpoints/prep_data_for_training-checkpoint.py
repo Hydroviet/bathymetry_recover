@@ -12,12 +12,7 @@ import neuralgym as ng
 import tensorflow as tf
 from tqdm import tqdm
 
-def get_depth(img, mask):
-    m = img*mask
-    m[m==0] = np.nan
-    return np.nanmax(m) - np.nanmin(m)
-    
-def gen_mask(img, min_size=64*64, max_size=128*128, max_depth=50):
+def gen_mask(img, min_size=64*64, max_size=128*128):
     def get_mask(img, level):
         mask = (img <= level)*1
         all_labels = measure.label(mask, background=0)
@@ -30,22 +25,23 @@ def gen_mask(img, min_size=64*64, max_size=128*128, max_depth=50):
             return 0, None
         mask = sorted(connected)[::-1][0]
         return mask[0], (all_labels == mask[1])*1
-
+    
     minL = img.min()
     maxL = img.max()
-    res = None
+    res = []
     while minL <= maxL:
         mid = (minL + maxL)//2
-        size_mask, mask = get_mask(img, mid)
-        depth = get_depth(img, mask)
-        if size_mask < min_size:
+        mask = get_mask(img, mid)
+        if mask[0] < min_size:
             minL = mid  + 1
-        elif size_mask > max_size or depth > max_depth:
+        elif mask[0] > max_size:
             maxL = mid -1
         else:
             res = mask
             break
-    return (img, res)
+    if len(res) == 0:
+        return img, None
+    return (img, res[1])
 
 def gen_mask_batch(batch_data, dest, start):
     indx = start
@@ -82,7 +78,7 @@ def read_batch(src, dest, batch_size=8, nthreads=8):
     for i in tqdm(range(num//batch_size)):
         imgs = list(sess.run(batch_data))
         imgs = preprocess(imgs)
-        gen_mask_batch(imgs, dest, batch_size*i)
+        gen_mask_batch(imgs, dest, batch_size*i + 6000)
     print('Total time {}'.format(time.time() - stime))
     
 if __name__ == "__main__":
