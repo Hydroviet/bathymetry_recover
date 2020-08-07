@@ -6,3 +6,4 @@ scikit-image
 numpy
 pandas
 matplotlib
+tqdm
