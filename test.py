@@ -41,7 +41,6 @@ if __name__ == "__main__":
     model = InpaintCAModel()
     # Read input include image (.tif) and mask (.png)
     image, meta = read_tif_file(args.image)
-    print(meta)
     original_shape = image.shape
     raw_image = image
     image = cv2.resize(image, (image.shape[1]//4, image.shape[0]//4))
