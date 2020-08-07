@@ -1,5 +1,11 @@
 # Bathymetry Recovering
 
+This GitHub repository implements and evaluates the application of deep ipainting network [1] to extrapolate reservoir's bathymetry in my thesis 2020.
+
+[1] J. Yu, Z. Lin, J. Yang, X. Shen, X. Lu, and T. S. Huang, Free-Form Image Inpainting with Gated Convolution, in The IEEE Conference on Computer Vision and Pattern Recognition (CVPR), 2018.
+
+---
+
 ## Setup
 
 - Install python3
@@ -8,13 +14,39 @@
 - Clone project: ``git clone https://github.com/Hydroviet/bathymetry_recover.git && cd bathymetry_recover``
 - Install other dependencies: ``pip install -r requirements.txt``
 
-## Training
-
 ## Testing with pretrainned model
 
-## TensorBoard
+Download the desired model(s) [here](), create a `model_logs/` directory in `bathymetry_recover/` and extract the zip folder to there.
 
-Visualization on [TensorBoard](https://www.tensorflow.org/programmers_guide/summaries_and_tensorboard) for training and validation is supported. Run `tensorboard --logdir model_logs --port 6006` to view training progress.
+There are 2 ways to test:
+
+- If you want to resize the input image, run:
+
+```bash
+python test.py --image data/aus_test/Hume.tif --mask data/aus_test/Hume_mask.png --output data/Hume_out.tif --checkpoint_dir model_logs/aus_128/
+```
+- If you want to split the input image into tiles, run:
+
+```bash
+python test.py --image data/aus_test/Hume.tif --mask data/aus_test/Hume_mask.png --output data/Hume_out.tif --checkpoint_dir model_logs/aus_128/ --num_tiles_x 2 --num_tiles_y 2
+```
+
+## Result
+
+We compared the generated bathymetry with [texas data]() on 4 dams and get the best result (scored on RMSE) as following:
+
+| Dams   |  Fairbairn | Hume | Eucumbene |  Burragorang |
+|----------|------:|------:|------:|------:|
+| Resize |  6.105376 | **7.126056** | **14.054130** | **22.074372** |
+| Tiling | **4.555024** |  13.844635 | 26.814401 |   25.755498 |
+
+To reproduce the result, run:
+
+```bash
+python3 test_dams.py --dams_list data/dams --input_dir data/aus_test/ --output_dir data/aus_test/ --checkpoint_dir logs/aus_128
+```
+
+If you want to see the result of tiling input image, add `--tiling` to the end of the command.
 
 ## License
 
@@ -24,4 +56,4 @@ The software is for educational and academic research purposes only.
 
 ## Acknowledgements
 
-We adapted the GitHub repository generative_inpainting to the setting of Digital Elevation Models. 
+We adapted the GitHub repository  [generative_inpainting](https://github.com/JiahuiYu/generative_inpainting) to the setting of Digital Elevation Models. 
