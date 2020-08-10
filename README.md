@@ -22,7 +22,7 @@ conda activate <your-virtual-name-env
 
 ## Testing with pretrainned model
 
-Download the desired model(s) [here](), create a `model_logs/` directory in `bathymetry_recover/` and extract the zip folder to there.
+Download the desired model(s) [here](https://drive.google.com/drive/folders/1XRpQCymUCu-KuPEZ_v0lH_TZiplqHSHD?usp=sharing), create a `model_logs/` directory in `bathymetry_recover/` and extract the zip folder to there.
 
 There are 2 ways to test:
 
@@ -39,7 +39,7 @@ python test.py --image data/aus_test/Hume.tif --mask data/aus_test/Hume_mask.png
 
 ## Result
 
-We compared the generated bathymetry with [texas data]() on 4 dams and get the best result (scored on RMSE) as following:
+We compared the generated bathymetry with [texas data](https://dataverse.tdl.org/dataset.xhtml?persistentId=doi:10.18738/T8/TO5HJG) on 4 dams and get the best result (scored on RMSE) as following:
 
 | Dams   |  Fairbairn | Hume | Eucumbene |  Burragorang |
 |----------|------:|------:|------:|------:|
