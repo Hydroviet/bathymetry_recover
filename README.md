@@ -8,11 +8,19 @@ This GitHub repository implements and evaluates the application of deep ipaintin
 
 ## Setup
 
-- Install python3
+- I recommend you to install by `conda`
+- Create a virtual enviroment by conda with python 3.6
+
+``bash
+conda create -n <your-virtual-name-env> python==3.6.6
+``
+``bash
+conda activate <your-virtual-name-env
+``
 - Install [tensorflow](https://www.tensorflow.org/install/) (tested on Release 1.3.0, 1.4.0, 1.5.0, 1.6.0, 1.7.0)
 - Install [neuralgym](https://github.com/htn274/neuralgym) toolkit (run ``pip install git+https://github.com/htn274/neuralgym``)
 - Clone project: ``git clone https://github.com/Hydroviet/bathymetry_recover.git && cd bathymetry_recover``
-- Install other dependencies: ``pip install -r requirements.txt``
+- Install other dependencies: ``pip install -r requirements.txt && pip install --upgrade numpy`` 
 
 ## Testing with pretrainned model
 
@@ -43,7 +51,7 @@ We compared the generated bathymetry with [texas data]() on 4 dams and get the b
 To reproduce the result, run:
 
 ```bash
-python3 test_dams.py --dams_list data/dams --input_dir data/aus_test/ --output_dir data/aus_test/ --checkpoint_dir logs/aus_128
+python3 test_dams.py --dams_list data/dams --input_dir data/aus_test/ --output_dir data/aus_test/ --checkpoint_dir model_logs/aus_128/
 ```
 
 If you want to see the result of tiling input image, add `--tiling` to the end of the command.
