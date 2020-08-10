@@ -11,12 +11,10 @@ This GitHub repository implements and evaluates the application of deep ipaintin
 - I recommend you to install by `conda`
 - Create a virtual enviroment by conda with python 3.6
 
-``bash
+```bash
 conda create -n <your-virtual-name-env> python==3.6.6
-``
-``bash
 conda activate <your-virtual-name-env
-``
+```
 - Install [tensorflow](https://www.tensorflow.org/install/) (tested on Release 1.3.0, 1.4.0, 1.5.0, 1.6.0, 1.7.0)
 - Install [neuralgym](https://github.com/htn274/neuralgym) toolkit (run ``pip install git+https://github.com/htn274/neuralgym``)
 - Clone project: ``git clone https://github.com/Hydroviet/bathymetry_recover.git && cd bathymetry_recover``
